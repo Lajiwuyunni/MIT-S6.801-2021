@@ -32,7 +32,7 @@ void transmit_data(int lpipe[2], int rpipe[2], int first)
   int data;
   // 从左管道读取数据
   while (read(lpipe[RD], &data, sizeof(int)) == sizeof(int)) {
-    // 将无法整除的数据传递入右管道
+    // 将无法整除的数据传递入右管道,左管道的第一个数据一定是素数
     if (data % first)
       write(rpipe[WR], &data, sizeof(int));
   }
@@ -54,7 +54,7 @@ void primes(int lpipe[2])
     transmit_data(lpipe, p, first);
 
     if (fork() == 0) {
-      primes(p);    // 递归的思想，但这将在一个新的进程中调用
+      primes(p);    // 递归且条件判断使得只会在新的进程中调用
     } else {
       close(p[RD]);
       wait(0);

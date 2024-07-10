@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
       break;
     case S_ARG_LINE_END:  // 将参数地址存入x_argv数组中同时执行指令
       x_argv[arg_cnt++] = &lines[arg_beg];
-      // 不加break，因为后续处理同S_LINE_END
+      // 不加break，因为后续处理同S_LINE_END,需要继续处理
     case S_LINE_END:      // 行结束，则为当前行执行指令
       arg_beg = arg_end;
       *p = '\0';
