@@ -96,7 +96,7 @@ sys_uptime(void)
   return xticks;
 }
 
-//添加sys_call
+//添加sys_trace
 uint64
 sys_trace(void)
 {
