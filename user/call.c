@@ -12,6 +12,8 @@ int f(int x) {
 }
 
 void main(void) {
-  printf("%d %d\n", f(8)+1, 13);
+  unsigned int i= 0x00646c72;
+  printf("H%x Wo%s\n",57616,&i);
+  //printf("%d %d\n", f(8)+1, 13);
   exit(0);
 }

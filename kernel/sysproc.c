@@ -7,6 +7,7 @@
 #include "spinlock.h"
 #include "proc.h"
 
+
 uint64
 sys_exit(void)
 {
@@ -70,6 +71,7 @@ sys_sleep(void)
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);
+  backtrace(); //添加一个backtrace的调用
   return 0;
 }
 
