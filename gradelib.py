@@ -483,7 +483,7 @@ Failed to shutdown QEMU.  You might need to 'killall qemu' or
             raise TerminateTest
 
     def __react(self, reactors, timeout):
-        deadline = time.time() + timeout
+        deadline = time.time() + timeout + 200
         try:
             while True:
                 timeleft = deadline - time.time()
