@@ -5,6 +5,10 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "fcntl.h"
+#include "sleeplock.h"
+#include "fs.h"
+#include "file.h"
 
 struct spinlock tickslock;
 uint ticks;
@@ -15,6 +19,43 @@ extern char trampoline[], uservec[], userret[];
 void kernelvec();
 
 extern int devintr();
+
+void page_fault_handler() {
+  struct proc *p = myproc();
+  // 检查 va 合法性
+  uint64 va = r_stval();
+  if (va >= p->sz || va < PGROUNDDOWN(p->trapframe->sp)) {
+    p->killed = 1;
+    return;
+  }
+  va = PGROUNDDOWN(va);
+  struct VMA *vma = 0;
+  for (int i = 0; i < MAX_VMA_POOL; i++) {
+    vma = p->vma_pool + i;
+    if (vma->used == 1 && (va >= vma->addr) && (va < (vma->addr + vma->length))) {
+      break;
+    }
+  }
+  if (vma != 0) {
+    // 先分配物理内存
+    char *kmem = kalloc();
+    if (kmem == 0) {
+      p->killed = 1;
+      return;
+    }
+    memset(kmem, 0, PGSIZE); 
+    // 将 va -> kmem 的映射加入到 pagetable 中
+    if (mappages(p->pagetable, va, PGSIZE, (uint64) kmem, (vma->prot << 1) | PTE_U) != 0) { 
+      kfree(kmem);
+      p->killed = 1;
+      return;
+    }
+    // 将映射文件的数据读入 kmem page 中
+    ilock(vma->f->ip);
+    readi(vma->f->ip, 0, (uint64) kmem, va - vma->addr, PGSIZE);
+    iunlock(vma->f->ip);
+  }
+}
 
 void
 trapinit(void)
@@ -65,6 +106,8 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if(r_scause()==13 || r_scause()==15){
+    page_fault_handler();
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
